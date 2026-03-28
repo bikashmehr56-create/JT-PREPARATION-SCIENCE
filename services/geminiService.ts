@@ -8,6 +8,27 @@ export async function generatePracticeQuestions(
   categoryName: string,
   fileData: FileData | null
 ): Promise<Question[]> {
+  try {
+    // Try calling the Vercel Edge Function first for faster loading and secure API key handling
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subjectTitle, topics, categoryName, fileData, type: 'questions' })
+    });
+    
+    if (res.ok) {
+      return await res.json();
+    }
+    
+    if (res.status === 429) throw new Error("RATE_LIMIT_EXCEEDED");
+    if (res.status === 401) throw new Error("API_KEY_INVALID");
+    
+    // If it fails (e.g., running locally without Vercel CLI), fall back to client-side generation
+  } catch (e: any) {
+    if (e.message === "RATE_LIMIT_EXCEEDED" || e.message === "API_KEY_INVALID") throw e;
+    console.log("Falling back to client-side generation...");
+  }
+
   const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("API_KEY_MISSING");
@@ -94,6 +115,9 @@ export async function generatePracticeQuestions(
     return questions.map(q => ({ ...q, subject: subjectTitle }));
   } catch (error: any) {
     console.error("Error generating questions:", error);
+    if (error.status === 429 || error.message?.includes("429") || error.message?.includes("Quota exceeded")) {
+      throw new Error("RATE_LIMIT_EXCEEDED");
+    }
     if (error.message?.includes("API key not valid") || error.status === 400 || error.status === 401 || error.status === 403) {
       throw new Error("API_KEY_INVALID");
     }
@@ -107,6 +131,27 @@ export async function generateFlashcards(
   categoryName: string,
   fileData: FileData | null
 ): Promise<Flashcard[]> {
+  try {
+    // Try calling the Vercel Edge Function first for faster loading and secure API key handling
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subjectTitle, topics, categoryName, fileData, type: 'flashcards' })
+    });
+    
+    if (res.ok) {
+      return await res.json();
+    }
+    
+    if (res.status === 429) throw new Error("RATE_LIMIT_EXCEEDED");
+    if (res.status === 401) throw new Error("API_KEY_INVALID");
+    
+    // If it fails (e.g., running locally without Vercel CLI), fall back to client-side generation
+  } catch (e: any) {
+    if (e.message === "RATE_LIMIT_EXCEEDED" || e.message === "API_KEY_INVALID") throw e;
+    console.log("Falling back to client-side generation...");
+  }
+
   const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("API_KEY_MISSING");
@@ -167,6 +212,9 @@ export async function generateFlashcards(
     return JSON.parse(response.text || "[]");
   } catch (error: any) {
     console.error("Error generating flashcards:", error);
+    if (error.status === 429 || error.message?.includes("429") || error.message?.includes("Quota exceeded")) {
+      throw new Error("RATE_LIMIT_EXCEEDED");
+    }
     if (error.message?.includes("API key not valid") || error.status === 400 || error.status === 401 || error.status === 403) {
       throw new Error("API_KEY_INVALID");
     }

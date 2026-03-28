@@ -66,6 +66,8 @@ const App: React.FC = () => {
         errorMessage = "API key is missing. Please configure your GEMINI_API_KEY in Netlify environment variables and redeploy.";
       } else if (err?.message === "API_KEY_INVALID") {
         errorMessage = "API key is invalid. Please check your GEMINI_API_KEY in Netlify environment variables.";
+      } else if (err?.message === "RATE_LIMIT_EXCEEDED") {
+        errorMessage = "You are generating too fast! The free tier allows 5 requests per minute. Please wait 30 seconds and try again.";
       } else if (err?.message) {
         errorMessage = err.message;
       }
