@@ -8,7 +8,11 @@ export async function generatePracticeQuestions(
   categoryName: string,
   fileData: FileData | null
 ): Promise<Question[]> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("API_KEY_MISSING");
+  }
+  const ai = new GoogleGenAI({ apiKey });
 
   const textPart = {
     text: `
@@ -45,10 +49,9 @@ export async function generatePracticeQuestions(
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite-preview",
+      model: "gemini-3-flash-preview",
       contents: { parts },
       config: {
-        thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
@@ -89,8 +92,11 @@ export async function generatePracticeQuestions(
     
     const questions: Question[] = JSON.parse(text);
     return questions.map(q => ({ ...q, subject: subjectTitle }));
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating questions:", error);
+    if (error.message?.includes("API key not valid") || error.status === 400 || error.status === 401 || error.status === 403) {
+      throw new Error("API_KEY_INVALID");
+    }
     throw error;
   }
 }
@@ -101,7 +107,11 @@ export async function generateFlashcards(
   categoryName: string,
   fileData: FileData | null
 ): Promise<Flashcard[]> {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("API_KEY_MISSING");
+  }
+  const ai = new GoogleGenAI({ apiKey });
 
   const textPart = {
     text: `
@@ -132,10 +142,9 @@ export async function generateFlashcards(
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite-preview",
+      model: "gemini-3-flash-preview",
       contents: { parts },
       config: {
-        thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
@@ -156,8 +165,11 @@ export async function generateFlashcards(
     });
 
     return JSON.parse(response.text || "[]");
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating flashcards:", error);
+    if (error.message?.includes("API key not valid") || error.status === 400 || error.status === 401 || error.status === 403) {
+      throw new Error("API_KEY_INVALID");
+    }
     throw error;
   }
 }

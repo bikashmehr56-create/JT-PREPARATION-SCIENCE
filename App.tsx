@@ -59,8 +59,17 @@ const App: React.FC = () => {
         const cards = await generateFlashcards(section.title, section.topics, category, activeFile);
         setState(prev => ({ ...prev, flashcards: cards, loading: false }));
       }
-    } catch (err) {
-      setState(prev => ({ ...prev, error: "Failed to load content. Please check connection and try again.", loading: false }));
+    } catch (err: any) {
+      console.error("Error fetching data:", err);
+      let errorMessage = "Failed to load content. Please check connection and try again.";
+      if (err?.message === "API_KEY_MISSING") {
+        errorMessage = "API key is missing. Please configure your GEMINI_API_KEY in Netlify environment variables and redeploy.";
+      } else if (err?.message === "API_KEY_INVALID") {
+        errorMessage = "API key is invalid. Please check your GEMINI_API_KEY in Netlify environment variables.";
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
     }
   }, [state.uploadedFile]);
 
