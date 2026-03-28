@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
 import { Question, Flashcard, FileData } from "../types";
 
 export async function generatePracticeQuestions(
@@ -15,10 +15,10 @@ export async function generatePracticeQuestions(
     Act as an expert examiner for the Odisha Junior Teacher (Schematic) exam. 
     Your goal is to help students crack the exam by providing high-quality bilingual practice material.
     
-    Generate EXACTLY 20 expert-level Multiple Choice Questions (MCQs) for the subject "${subjectTitle}" under "${categoryName}".
+    Generate EXACTLY 10 expert-level Multiple Choice Questions (MCQs) for the subject "${subjectTitle}" under "${categoryName}".
     Specific topics to cover: ${topics.join(", ")}.
     
-    ${fileData ? "CRITICAL: A reference study document has been uploaded. Analyze its content thoroughly and extract key concepts, facts, and pedagogical theories to generate exactly 20 highly relevant questions aligned with this source material." : "Analyze the standard JT exam syllabus and pedagogical standards for this subject to generate 20 comprehensive questions."}
+    ${fileData ? "CRITICAL: A reference study document has been uploaded. Analyze its content thoroughly and extract key concepts, facts, and pedagogical theories to generate exactly 10 highly relevant questions aligned with this source material." : "Analyze the standard JT exam syllabus and pedagogical standards for this subject to generate 10 comprehensive questions."}
 
     CRITICAL REQUIREMENTS:
     1. EACH question MUST be strictly bilingual: provide a full English version AND a faithful, accurate Odia translation.
@@ -29,7 +29,7 @@ export async function generatePracticeQuestions(
        - English: Professional, clear, and grammatically correct.
        - Odia: Use formal academic Odia as found in SCERT/Odisha State Board textbooks. Ensure correct spelling and punctuation.
     6. Ensure the difficulty level matches the Junior Teacher recruitment standards.
-    7. Return exactly 20 questions in the array.
+    7. Return exactly 10 questions in the array.
   `};
 
   const parts: any[] = [textPart];
@@ -45,9 +45,10 @@ export async function generatePracticeQuestions(
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.1-flash-lite-preview",
       contents: { parts },
       config: {
+        thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
@@ -105,7 +106,7 @@ export async function generateFlashcards(
   const textPart = {
     text: `
     Act as a senior teacher educator for the Odisha Junior Teacher recruitment. 
-    Generate 20 high-yield flashcards for quick revision of key terms, pedagogical concepts, and important facts.
+    Generate 10 high-yield flashcards for quick revision of key terms, pedagogical concepts, and important facts.
     
     Subject: "${subjectTitle}"
     Category: "${categoryName}"
@@ -131,9 +132,10 @@ export async function generateFlashcards(
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.1-flash-lite-preview",
       contents: { parts },
       config: {
+        thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
